@@ -1,4 +1,4 @@
-pub struct PasswordEntry {
+/*pub struct PasswordEntry {
     pub username: String,
     pub password: String,
     pub website: String,
@@ -16,4 +16,4 @@ impl PasswordEntry {
         format!("Username: {}\nPassword: {}\nWebsite: {}\n", self.username, self.password, self.website)
     }
 }
-
+*/

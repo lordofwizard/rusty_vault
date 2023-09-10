@@ -1,4 +1,4 @@
-
+/*
 use std::fs::{File, OpenOptions};
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
@@ -159,4 +159,4 @@ fn list_passwords(entries: &Vec<PasswordEntry>) -> io::Result<()> {
     }
 
     Ok(())
-}
+}*/
