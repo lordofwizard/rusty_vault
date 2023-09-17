@@ -3,6 +3,8 @@ use std::io;
 use serde::{Serialize, Deserialize};
 use std::fs::File;
 use std::io::Write;
+use std::io::BufRead;
+use std::fs::OpenOptions;
 
 #[derive(Debug,Serialize,Deserialize)]
 pub struct ServiceInfo {
@@ -18,7 +20,9 @@ impl ServiceInfo {
             password,
         }
     }
-
+    pub fn from_json(json_string: &str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(json_string)
+    }
     pub fn from_user_input() -> Self {
         println!("Enter Password Entry:");
         let mut service = String::new();
@@ -38,21 +42,42 @@ impl ServiceInfo {
     fn to_json(&self) -> String {
         serde_json::to_string(&self).expect("Failed to serialize to JSON")
     }
+    
     pub fn write_to_file(&self) {
-        let json_output = self.to_json();
+    let json_output = format!("{}\n", self.to_json());
 
-        match File::create("passwords.json") {
-            Ok(mut file) => {
-                if let Err(e) = file.write_all(json_output.as_bytes()) {
-                    eprintln!("Error writing to file: {}", e);
-                } else {
-                    println!("Successfully wrote to passwords.json");
-                }
+    match OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open("passwords.json")
+    {
+        Ok(mut file) => {
+            if let Err(e) = file.write_all(json_output.as_bytes()) {
+                eprintln!("Error writing to file: {}", e);
+            } else {
+                println!("Successfully wrote to passwords.json");
             }
-            Err(e) => eprintln!("Error creating file: {}", e),
         }
+        Err(e) => eprintln!("Error opening file: {}", e),
     }
-
 }
 
 
+}
+
+pub fn read_passwords_from_file() -> Result<Vec<ServiceInfo>, io::Error> {
+    let file = File::open("passwords.json")?;
+    let reader = io::BufReader::new(file);
+
+    let mut services = Vec::new();
+
+    for line in reader.lines() {
+        if let Ok(json_string) = line {
+            if let Ok(service_info) = ServiceInfo::from_json(&json_string) {
+                services.push(service_info);
+            }
+        }
+    }
+
+    Ok(services)
+} 

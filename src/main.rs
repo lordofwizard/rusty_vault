@@ -1,18 +1,25 @@
 mod run;
 mod pass_entry;
 mod pentry;
-use std::collections::HashMap;
+
 use crate::pentry::ServiceInfo;
+use crate::pentry::read_passwords_from_file;
 
 
 fn main() {
-    let my_service = ServiceInfo::new(String::from("example_service"),
-        String::from("my_username"),
-        String::from("my_password")
+    let _my_service = ServiceInfo::new(String::from("Google"),
+        String::from("alskjkj"),
+        String::from("aslkjglkajsg")
     );
-    
+    let services = read_passwords_from_file().unwrap_or_else(|err| {
+        eprintln!("Error reading passwords: {}", err);
+        Vec::new()
+    });
 
-    my_service.write_to_file();
+    for service in &services {
+        println!("{:?}", service);
+    }
+   //_my_service.write_to_file();
 }
 
 
