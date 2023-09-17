@@ -1,18 +1,18 @@
 mod run;
 mod pass_entry;
-
+mod pentry;
 use std::collections::HashMap;
+use crate::pentry::ServiceInfo;
 
-#[derive(Debug)]
-pub struct Entry(String, String);
 
-fn main(){
+fn main() {
+    let my_service = ServiceInfo::new(String::from("example_service"),
+        String::from("my_username"),
+        String::from("my_password")
+    );
+    
 
-    let mut passwords : HashMap<String , Entry> = HashMap::new();
-    passwords.insert(String::from("Google"),Entry(String::from("advait@gmail.com"),String::from("iamyofathr")));
-
-    println!("{:?}",passwords);
-    println!("Hello World, babyyy!");
-
+    my_service.write_to_file();
 }
+
 
