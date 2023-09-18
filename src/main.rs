@@ -4,21 +4,39 @@ use crate::pentry::prompt;
 use crate::pentry::read_passwords_from_file;
 use crate::pentry::ServiceInfo;
 
-fn clr(){
+fn clr() {
     print!("{}[2J", 27 as char);
 }
 fn main() {
     clr();
-println!("              _                                       _                                 "); 
-println!("            /' `\\                      /'            ' )       )                   /'  /'");
-println!("          /'     )                 --/'--             /      _/                  /'--/'--");
-println!("        /' (___,/'        ____     /'                /    _/~____              /'  /'   "); 
-println!("      /'   ;   /'    /  /'    )--/' /'    /         /  _/~ /'    )  /'    /  /'  /'     "); 
-println!("    /'    /' /'    /'  '---,   /' /'    /'         /_/~  /'    /' /'    /' /'  /'       "); 
-println!("(,/'     (_,(___,/(__(___,/   (__(___,/(__        /~    (___,/(__(___,/(__(__ (__       "); 
-println!("                                    /'                                                  "); 
-println!("                            /     /'                                                    "); 
-println!("                           (___,/'                                                      "); 
+    println!(
+        "              _                                       _                                 "
+    );
+    println!("            /' `\\                      /'            ' )       )                   /'  /'");
+    println!(
+        "          /'     )                 --/'--             /      _/                  /'--/'--"
+    );
+    println!(
+        "        /' (___,/'        ____     /'                /    _/~____              /'  /'   "
+    );
+    println!(
+        "      /'   ;   /'    /  /'    )--/' /'    /         /  _/~ /'    )  /'    /  /'  /'     "
+    );
+    println!(
+        "    /'    /' /'    /'  '---,   /' /'    /'         /_/~  /'    /' /'    /' /'  /'       "
+    );
+    println!(
+        "(,/'     (_,(___,/(__(___,/   (__(___,/(__        /~    (___,/(__(___,/(__(__ (__       "
+    );
+    println!(
+        "                                    /'                                                  "
+    );
+    println!(
+        "                            /     /'                                                    "
+    );
+    println!(
+        "                           (___,/'                                                      "
+    );
     loop {
         println!("Password Manager Menu:");
         println!("1. Add Entry");
@@ -47,9 +65,12 @@ println!("                           (___,/'                                    
                     Vec::new()
                 });
                 for item in &services {
-                    println!("Service = {}
+                    println!(
+                        "Service = {}
     - Username : {} 
-    - Password : {}", item.service, item.username, item.password);
+    - Password : {}",
+                        item.service, item.username, item.password
+                    );
                 }
             }
             "3" => {
@@ -61,10 +82,12 @@ println!("                           (___,/'                                    
                 let search = prompt("Search :");
                 for item in &services {
                     if item.service.as_str() == search.as_str() {
-                        
-                    println!("Service = {}
+                        println!(
+                            "Service = {}
     - Username : {} 
-    - Password : {}", item.service, item.username, item.password);
+    - Password : {}",
+                            item.service, item.username, item.password
+                        );
                     }
                 }
             }
