@@ -1,5 +1,6 @@
-# Rusty Vault
-![Image](img/logo.png logo)
+# Rusty Vault  
+
+![Image](img/logo.png)
 
 ## Table of Contents
 
