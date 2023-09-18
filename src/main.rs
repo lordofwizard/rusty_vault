@@ -37,7 +37,9 @@ fn main() {
                     Vec::new()
                 });
                 for item in &services {
-                    println!("Entry = {:?}", item);
+                    println!("Service = {}
+    - Username : {} 
+    - Password : {}", item.service, item.username, item.password);
                 }
             }
             "3" => {

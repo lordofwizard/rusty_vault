@@ -7,9 +7,9 @@ use std::io::Write;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ServiceInfo {
-    service: String,
-    username: String,
-    password: String,
+    pub service: String,
+    pub username: String,
+    pub password: String,
 }
 impl ServiceInfo {
     pub fn new(service: String, username: String, password: String) -> Self {
