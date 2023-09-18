@@ -6,7 +6,7 @@ use std::vec::Vec;
 use crate::pass_entry::*;
 fn test() -> io::Result<()> {
     let authenticated = authenticate_user();
-    
+
     if !authenticated {
         println!("Authentication failed. Exiting.");
         return Ok(());
@@ -72,7 +72,7 @@ fn load_first_line_from_file(file_path: &str) -> Option<String> {
     let mut reader = BufReader::new(file);
     let mut first_line = String::new();
     reader.read_line(&mut first_line).ok()?;
-    
+
     Some(first_line.trim().to_string())
 }
 
@@ -105,10 +105,10 @@ fn load_passwords() -> io::Result<Vec<PasswordEntry>> {
     };
 
     let mut skip_first_line = true;
-    
+
     for line in reader.lines() {
         let line = line.unwrap().trim().to_string();
-        
+
         if skip_first_line {
             skip_first_line = false;
             continue;
@@ -153,7 +153,7 @@ fn save_passwords(entries: &Vec<PasswordEntry>) -> io::Result<()> {
 
 fn list_passwords(entries: &Vec<PasswordEntry>) -> io::Result<()> {
     println!("Password Entries:");
-    
+
     for entry in entries {
         println!("{}", entry.to_string());
     }
