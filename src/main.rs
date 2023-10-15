@@ -1,42 +1,32 @@
 mod pentry;
-
 use crate::pentry::prompt;
-use crate::pentry::read_passwords_from_file;
+// use crate::pentry::read_passwords_from_file;
 use crate::pentry::ServiceInfo;
+
+mod db;
+use db::{init_database, write_password_to_db, read_passwords_from_db, search_service_by_name};
 
 fn clr() {
     print!("{}[2J", 27 as char);
 }
 fn main() {
+    let conn = init_database().expect("Failed to initialize the database");
     clr();
-    println!(
-        "              _                                       _                                 "
-    );
-    println!("            /' `\\                      /'            ' )       )                   /'  /'");
-    println!(
-        "          /'     )                 --/'--             /      _/                  /'--/'--"
-    );
-    println!(
-        "        /' (___,/'        ____     /'                /    _/~____              /'  /'   "
-    );
-    println!(
-        "      /'   ;   /'    /  /'    )--/' /'    /         /  _/~ /'    )  /'    /  /'  /'     "
-    );
-    println!(
-        "    /'    /' /'    /'  '---,   /' /'    /'         /_/~  /'    /' /'    /' /'  /'       "
-    );
-    println!(
-        "(,/'     (_,(___,/(__(___,/   (__(___,/(__        /~    (___,/(__(___,/(__(__ (__       "
-    );
-    println!(
-        "                                    /'                                                  "
-    );
-    println!(
-        "                            /     /'                                                    "
-    );
-    println!(
-        "                           (___,/'                                                      "
-    );
+    let ascii = r#"
+
+    ________  ________  ________   ________           ___      ___ ________  ___  ___  ___   _________   
+    |\   __  \|\   __  \|\   ____\ |\   ____\         |\  \    /  /|\   __  \|\  \|\  \|\  \ |\___   ___\ 
+    \ \  \|\  \ \  \|\  \ \  \___|_\ \  \___|_        \ \  \  /  / | \  \|\  \ \  \\\  \ \  \\|___ \  \_| 
+    \ \   ____\ \   __  \ \_____  \\ \_____  \        \ \  \/  / / \ \   __  \ \  \\\  \ \  \    \ \  \  
+     \ \  \___|\ \  \ \  \|____|\  \\|____|\  \        \ \    / /   \ \  \ \  \ \  \\\  \ \  \____\ \  \ 
+      \ \__\    \ \__\ \__\____\_\  \ ____\_\  \        \ \__/ /     \ \__\ \__\ \_______\ \_______\ \__\
+       \|__|     \|__|\|__|\_________\\_________\        \|__|/       \|__|\|__|\|_______|\|_______|\|__|
+                          \|_________\|_________|                                                        
+
+
+
+    "#;
+    println!("{ascii}");
     loop {
         println!("Password Manager Menu:");
         println!("1. Add Entry");
@@ -56,12 +46,21 @@ fn main() {
                     prompt("Password :"),
                 );
                 println!("Entry added successfully.");
-                entry.write_to_file();
+                write_password_to_db(
+                    &conn,
+                    &entry.service,
+                    &entry.username,
+                    &entry.password,
+                )
+                .expect("Failed to write to the database");
+    
             }
             "2" => {
                 clr();
-                let services = read_passwords_from_file().unwrap_or_else(|err| {
-                    eprintln!("Error reading passwords: {}", err);
+                let services = read_passwords_from_db(&conn).unwrap_or_else(|err| {
+                    eprintln!("Error reading passwords: {}", err);    
+                // let services = read_passwords_from_file().unwrap_or_else(|err| {
+                    // eprintln!("Error reading passwords: {}", err);
                     Vec::new()
                 });
                 for item in &services {
@@ -73,24 +72,27 @@ fn main() {
                     );
                 }
             }
-            "3" => {
+            "3" =>{
                 clr();
-                let services = read_passwords_from_file().unwrap_or_else(|err| {
-                    eprintln!("Error reading passwords: {}", err);
-                    Vec::new()
-                });
-                let search = prompt("Search :");
-                for item in &services {
-                    if item.service.as_str() == search.as_str() {
+                let search = prompt("Search by service name:");
+                match search_service_by_name(&conn, &search) {
+                    Ok(Some(entry)) => {
                         println!(
                             "Service = {}
-    - Username : {} 
-    - Password : {}",
-                            item.service, item.username, item.password
+                - Username : {} 
+                - Password : {:?}",
+                            entry.service, entry.username, entry.password
                         );
+                    }
+                    Ok(None) => {
+                        println!("Service not found.");
+                    }
+                    Err(err) => {
+                        eprintln!("Error searching for service: {}", err);
                     }
                 }
             }
+            
             "4" => {
                 clr();
                 println!("Goodbye!");
