@@ -1,5 +1,3 @@
-// If you get a error at first time running this project - Install libsqlite3-dev and sqlite3
-// sudo apt-get install sqlite3 libsqlite3-dev
 mod db;
 use db::*;
 
