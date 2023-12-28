@@ -1,6 +1,6 @@
+
+use rocksdb::{DB, Options};
 use std::env;
-use std::fs::{self, File};
-use std::io::{BufRead, BufReader, Write};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -9,6 +9,8 @@ fn main() {
         println!("stfu");
         return;
     }
+
+    let db = DB::open_default("rocksdb_data").expect("Failed to open RocksDB");
 
     match args[1].as_str() {
         "add" => {
@@ -21,7 +23,7 @@ fn main() {
             let username = &args[3];
             let password = &args[4];
 
-            add_password(identifier, username, password);
+            add_password(&db, identifier, username, password);
         }
         "show" => {
             if args.len() != 3 {
@@ -31,7 +33,7 @@ fn main() {
 
             let identifier = &args[2];
 
-            show_password(identifier);
+            show_password(&db, identifier);
         }
         "remove" => {
             if args.len() != 3 {
@@ -41,7 +43,7 @@ fn main() {
 
             let identifier = &args[2];
 
-            remove_password(identifier);
+            remove_password(&db, identifier);
         }
         _ => {
             println!("stfu");
@@ -49,67 +51,52 @@ fn main() {
     }
 }
 
-fn add_password(identifier: &str, username: &str, password: &str) {
-    let entry = format!("{},{},{}\n", identifier, username, password);
+fn add_password(db: &DB, identifier: &str, username: &str, password: &str) {
+    let key = identifier.as_bytes();
+    let value = format!("{},{}", username, password);
 
-    if let Ok(mut file) = File::create("pass.csv") {
-        if let Err(e) = file.write_all(entry.as_bytes()) {
-            eprintln!("Error writing to file: {}", e);
+    db.put(key, value.as_bytes()).expect("Failed to add password");
+    println!("Password added successfully.");
+}
+
+fn show_password(db: &DB, identifier: &str) {
+    let key = identifier.as_bytes();
+
+    match db.get(key) {
+        Ok(Some(value)) => {
+            if let Ok(value_str) = String::from_utf8(value) {
+                let fields: Vec<&str> = value_str.split(',').collect();
+                if fields.len() == 2 {
+                    println!("Password: {}", fields[1]);
+                } else {
+                    println!("stfu");
+                }
+            } else {
+                println!("stfu");
+            }
         }
-        println!("Password added successfully.");
-    } else {
-        eprintln!("Error creating file.");
+        Ok(None) => {
+            println!("stfu");
+        }
+        Err(e) => {
+            eprintln!("Error retrieving password: {}", e);
+        }
     }
 }
 
-fn show_password(identifier: &str) {
-    if let Ok(file) = File::open("pass.csv") {
-        let reader = BufReader::new(file);
+fn remove_password(db: &DB, identifier: &str) {
+    let key = identifier.as_bytes();
 
-        for line in reader.lines() {
-            if let Ok(entry) = line {
-                let fields: Vec<&str> = entry.split(',').collect();
-                if fields.len() == 3 && fields[0] == identifier {
-                    println!("Password: {}", fields[2]);
-                    return;
-                }
-            }
+    match db.get(key) {
+        Ok(Some(_)) => {
+            db.delete(key).expect("Failed to remove password");
+            println!("Password removed successfully.");
         }
-
-        println!("stfu");
-    } else {
-        println!("stfu");
-    }
-}
-
-fn remove_password(identifier: &str) {
-    let temp_file = "pass_temp.csv";
-
-    if let Ok(file) = File::open("pass.csv") {
-        let reader = BufReader::new(file);
-        let mut writer = File::create(temp_file).expect("Error creating temp file.");
-
-        for line in reader.lines() {
-            if let Ok(entry) = line {
-                let fields: Vec<&str> = entry.split(',').collect();
-                if fields.len() == 3 && fields[0] == identifier {
-                    continue; // Skip the entry to be removed
-                }
-
-                if let Err(e) = writeln!(writer, "{}", entry) {
-                    eprintln!("Error writing to temp file: {}", e);
-                }
-            }
+        Ok(None) => {
+            println!("stfu");
         }
-    } else {
-        eprintln!("Error opening file.");
-        return;
+        Err(e) => {
+            eprintln!("Error retrieving password: {}", e);
+        }
     }
-
-    // Replace the original file with the temp file
-    if let Err(e) = fs::rename(temp_file, "pass.csv") {
-        eprintln!("Error renaming temp file: {}", e);
-    }
-
-    println!("Password removed successfully.");
 }
