@@ -1,103 +1,115 @@
-mod pentry;
+use std::env;
+use std::fs::{self, File};
+use std::io::{BufRead, BufReader, Write};
 
-use crate::pentry::prompt;
-use crate::pentry::read_passwords_from_file;
-use crate::pentry::ServiceInfo;
-
-fn clr() {
-    print!("{}[2J", 27 as char);
-}
 fn main() {
-    clr();
-    println!(
-        "              _                                       _                                 "
-    );
-    println!("            /' `\\                      /'            ' )       )                   /'  /'");
-    println!(
-        "          /'     )                 --/'--             /      _/                  /'--/'--"
-    );
-    println!(
-        "        /' (___,/'        ____     /'                /    _/~____              /'  /'   "
-    );
-    println!(
-        "      /'   ;   /'    /  /'    )--/' /'    /         /  _/~ /'    )  /'    /  /'  /'     "
-    );
-    println!(
-        "    /'    /' /'    /'  '---,   /' /'    /'         /_/~  /'    /' /'    /' /'  /'       "
-    );
-    println!(
-        "(,/'     (_,(___,/(__(___,/   (__(___,/(__        /~    (___,/(__(___,/(__(__ (__       "
-    );
-    println!(
-        "                                    /'                                                  "
-    );
-    println!(
-        "                            /     /'                                                    "
-    );
-    println!(
-        "                           (___,/'                                                      "
-    );
-    loop {
-        println!("Password Manager Menu:");
-        println!("1. Add Entry");
-        println!("2. List Entries");
-        println!("3. Search");
-        println!("4. Quit");
+    let args: Vec<String> = env::args().collect();
 
-        let mut choice = String::new();
-        std::io::stdin().read_line(&mut choice).unwrap();
-
-        match choice.trim() {
-            "1" => {
-                clr();
-                let entry = ServiceInfo::new(
-                    prompt("Service :"),
-                    prompt("Username :"),
-                    prompt("Password :"),
-                );
-                println!("Entry added successfully.");
-                entry.write_to_file();
-            }
-            "2" => {
-                clr();
-                let services = read_passwords_from_file().unwrap_or_else(|err| {
-                    eprintln!("Error reading passwords: {}", err);
-                    Vec::new()
-                });
-                for item in &services {
-                    println!(
-                        "Service = {}
-    - Username : {} 
-    - Password : {}",
-                        item.service, item.username, item.password
-                    );
-                }
-            }
-            "3" => {
-                clr();
-                let services = read_passwords_from_file().unwrap_or_else(|err| {
-                    eprintln!("Error reading passwords: {}", err);
-                    Vec::new()
-                });
-                let search = prompt("Search :");
-                for item in &services {
-                    if item.service.as_str() == search.as_str() {
-                        println!(
-                            "Service = {}
-    - Username : {} 
-    - Password : {}",
-                            item.service, item.username, item.password
-                        );
-                    }
-                }
-            }
-            "4" => {
-                clr();
-                println!("Goodbye!");
-                break;
-            }
-            _ => println!("Invalid choice."),
-        }
-        println!("\n\n");
+    if args.len() < 2 {
+        println!("stfu");
+        return;
     }
+
+    match args[1].as_str() {
+        "add" => {
+            if args.len() != 5 {
+                println!("stfu");
+                return;
+            }
+
+            let identifier = &args[2];
+            let username = &args[3];
+            let password = &args[4];
+
+            add_password(identifier, username, password);
+        }
+        "show" => {
+            if args.len() != 3 {
+                println!("stfu");
+                return;
+            }
+
+            let identifier = &args[2];
+
+            show_password(identifier);
+        }
+        "remove" => {
+            if args.len() != 3 {
+                println!("stfu");
+                return;
+            }
+
+            let identifier = &args[2];
+
+            remove_password(identifier);
+        }
+        _ => {
+            println!("stfu");
+        }
+    }
+}
+
+fn add_password(identifier: &str, username: &str, password: &str) {
+    let entry = format!("{},{},{}\n", identifier, username, password);
+
+    if let Ok(mut file) = File::create("pass.csv") {
+        if let Err(e) = file.write_all(entry.as_bytes()) {
+            eprintln!("Error writing to file: {}", e);
+        }
+        println!("Password added successfully.");
+    } else {
+        eprintln!("Error creating file.");
+    }
+}
+
+fn show_password(identifier: &str) {
+    if let Ok(file) = File::open("pass.csv") {
+        let reader = BufReader::new(file);
+
+        for line in reader.lines() {
+            if let Ok(entry) = line {
+                let fields: Vec<&str> = entry.split(',').collect();
+                if fields.len() == 3 && fields[0] == identifier {
+                    println!("Password: {}", fields[2]);
+                    return;
+                }
+            }
+        }
+
+        println!("stfu");
+    } else {
+        println!("stfu");
+    }
+}
+
+fn remove_password(identifier: &str) {
+    let temp_file = "pass_temp.csv";
+
+    if let Ok(file) = File::open("pass.csv") {
+        let reader = BufReader::new(file);
+        let mut writer = File::create(temp_file).expect("Error creating temp file.");
+
+        for line in reader.lines() {
+            if let Ok(entry) = line {
+                let fields: Vec<&str> = entry.split(',').collect();
+                if fields.len() == 3 && fields[0] == identifier {
+                    continue; // Skip the entry to be removed
+                }
+
+                if let Err(e) = writeln!(writer, "{}", entry) {
+                    eprintln!("Error writing to temp file: {}", e);
+                }
+            }
+        }
+    } else {
+        eprintln!("Error opening file.");
+        return;
+    }
+
+    // Replace the original file with the temp file
+    if let Err(e) = fs::rename(temp_file, "pass.csv") {
+        eprintln!("Error renaming temp file: {}", e);
+    }
+
+    println!("Password removed successfully.");
 }
