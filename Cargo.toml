@@ -3,7 +3,7 @@ name = "rusty_vault"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-rocksdb = "0.21.0"
+rpassword = "7.3.1"
+rust-crypto = "0.2.36"
+sled = "0.34.7"
